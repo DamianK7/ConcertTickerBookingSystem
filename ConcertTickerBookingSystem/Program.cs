@@ -52,3 +52,52 @@ class PrivateConcert : Concert
         return base.GetDetails() + $" - Tylko na zaproszenie: {InvitationOnly}";
     }
 }
+
+class BookingSystem
+{
+    private List<IConcert> concerts = new();
+
+    public void AddConcert()
+    {
+        Console.WriteLine("Typ koncertu: Regular, VIP, Online, Private");
+        string type = Console.ReadLine()?.ToLower();
+
+        Concert concert = type switch
+        {
+            "vip" => new VIPConcert(),
+            "online" => new OnlineConcert(),
+            "private" => new PrivateConcert(),
+            _ => new Concert(),
+        };
+
+        Console.Write("Nazwa koncertu: ");
+        concert.Name = Console.ReadLine();
+        Console.Write("Data koncertu (DD-MM-YYYY): ");
+        concert.Date = Console.ReadLine();
+        Console.Write("Lokalizacja: ");
+        concert.Location = Console.ReadLine();
+        Console.Write("Liczba miejsc: ");
+        concert.AvailableSeats = int.Parse(Console.ReadLine());
+        Console.Write("Cena biletu: ");
+        concert.TicketPrice = decimal.Parse(Console.ReadLine());
+
+        if (concert is VIPConcert vip)
+        {
+            Console.Write("Szczegóły spotkania VIP: ");
+            vip.MeetingDetails = Console.ReadLine();
+        }
+        else if (concert is OnlineConcert online)
+        {
+            Console.Write("Platforma koncertu online: ");
+            online.Platform = Console.ReadLine();
+        }
+        else if (concert is PrivateConcert privateConcert)
+        {
+            Console.Write("Szczegóły zaproszenia: ");
+            privateConcert.InvitationOnly = Console.ReadLine();
+        }
+
+        concerts.Add(concert);
+        Console.WriteLine("Koncert został dodany!");
+    }
+}
