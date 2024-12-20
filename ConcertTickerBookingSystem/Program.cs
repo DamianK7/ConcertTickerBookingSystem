@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 interface IConcert
 {
@@ -100,91 +102,165 @@ class BookingSystem
         concerts.Add(concert);
         Console.WriteLine("Koncert został dodany!");
     }
-}
 
-public void DisplayConcerts()
-{
-    if (concerts.Count == 0)
+    public void DisplayConcerts()
     {
-        Console.WriteLine("Brak dostępnych koncertów.");
-    }
-    else
-    {
-        foreach (var concert in concerts)
+        if (concerts.Count == 0)
         {
-            Console.WriteLine(concert is Concert c ? c.GetDetails() : null);
+            Console.WriteLine("Brak dostępnych koncertów.");
+        }
+        else
+        {
+            foreach (var concert in concerts)
+            {
+                Console.WriteLine(concert is Concert c ? c.GetDetails() : null);
+            }
         }
     }
-}
 
-public void SearchConcerts()
-{
-    Console.WriteLine("Wyszukiwanie koncertów:");
-    Console.WriteLine("1 - Data");
-    Console.WriteLine("2 - Lokalizacja");
-    Console.WriteLine("3 - Cena maksymalna");
-
-    string choice = Console.ReadLine();
-    IEnumerable<IConcert> results = choice switch
+    public void SearchConcerts()
     {
-        "1" => concerts.Where(c => c.Date == ReadInput("Podaj datę (DD-MM-YYYY): ")),
-        "2" => concerts.Where(c => c.Location.Contains(ReadInput("Podaj lokalizację: "), StringComparison.OrdinalIgnoreCase)),
-        "3" => concerts.Where(c => c.TicketPrice <= decimal.Parse(ReadInput("Podaj maksymalną cenę: "))),
-        _ => null
-    };
+        Console.WriteLine("Wyszukiwanie koncertów:");
+        Console.WriteLine("1 - Data");
+        Console.WriteLine("2 - Lokalizacja");
+        Console.WriteLine("3 - Cena maksymalna");
 
-    if (results != null && results.Any())
-    {
-        foreach (var concert in results)
+        string choice = Console.ReadLine();
+        IEnumerable<IConcert> results = new List<IConcert>();
+
+        switch (choice)
         {
-            Console.WriteLine(concert is Concert c ? c.GetDetails() : null);
+            case "1":
+                string date = ReadInput("Podaj datę (DD-MM-YYYY): ");
+                results = concerts.Where(c => c.Date == date);
+                break;
+
+            case "2":
+                string location = ReadInput("Podaj lokalizację: ");
+                results = concerts.Where(c => c.Location.Contains(location, StringComparison.OrdinalIgnoreCase));
+                break;
+
+            case "3":
+                if (decimal.TryParse(ReadInput("Podaj maksymalną cenę: "), out decimal maxPrice))
+                {
+                    results = concerts.Where(c => c.TicketPrice <= maxPrice);
+                }
+                else
+                {
+                    Console.WriteLine("Niepoprawna cena. Spróbuj ponownie.");
+                    return;
+                }
+                break;
+
+            default:
+                Console.WriteLine("Nieprawidłowy wybór.");
+                return;
+        }
+
+        if (results.Any())
+        {
+            Console.WriteLine("Znalezione koncerty:");
+            foreach (var concert in results)
+            {
+                Console.WriteLine(concert is Concert c ? c.GetDetails() : null);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Nie znaleziono pasujących koncertów.");
         }
     }
-    else
-    {
-        Console.WriteLine("Nie znaleziono pasujących koncertów.");
-    }
-}
 
-public void BookTicket()
-{
-    var concertName = ReadInput("Podaj nazwę koncertu: ");
-    var concert = concerts.FirstOrDefault(c => c.Name == concertName);
-
-    if (concert == null)
+    public void BookTicket()
     {
-        Console.WriteLine("Koncert nie został znaleziony.");
-        return;
-    }
+        var concertName = ReadInput("Podaj nazwę koncertu: ");
+        var concert = concerts.FirstOrDefault(c => c.Name == concertName);
 
-    int seatsToBook = int.Parse(ReadInput("Podaj liczbę miejsc do rezerwacji: "));
-    if (seatsToBook <= concert.AvailableSeats)
-    {
-        concert.AvailableSeats -= seatsToBook;
-        Console.WriteLine($"Zarezerwowano {seatsToBook} miejsc. Pozostało {concert.AvailableSeats} wolnych.");
-        if (concert.AvailableSeats <= 10)
+        if (concert == null)
         {
-            Console.WriteLine("Uwaga! Pozostało mniej niż 10 miejsc!");
+            Console.WriteLine("Koncert nie został znaleziony.");
+            return;
+        }
+
+        int seatsToBook = int.Parse(ReadInput("Podaj liczbę miejsc do rezerwacji: "));
+        if (seatsToBook <= concert.AvailableSeats)
+        {
+            concert.AvailableSeats -= seatsToBook;
+            Console.WriteLine($"Zarezerwowano {seatsToBook} miejsc. Pozostało {concert.AvailableSeats} wolnych.");
+            if (concert.AvailableSeats <= 10)
+            {
+                Console.WriteLine("Uwaga! Pozostało mniej niż 10 miejsc!");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Nie ma wystarczającej liczby miejsc.");
         }
     }
-    else
+
+    public void CancelBooking()
     {
-        Console.WriteLine("Nie ma wystarczającej liczby miejsc.");
+        var concertName = ReadInput("Podaj nazwę koncertu: ");
+        var concert = concerts.FirstOrDefault(c => c.Name == concertName);
+
+        if (concert == null)
+        {
+            Console.WriteLine("Koncert nie został znaleziony.");
+            return;
+        }
+
+        int seatsToCancel = int.Parse(ReadInput("Podaj liczbę miejsc do anulowania: "));
+        concert.AvailableSeats += seatsToCancel;
+        Console.WriteLine($"Anulowano {seatsToCancel} rezerwacji. Dostępne miejsca: {concert.AvailableSeats}.");
+    }
+
+    private string ReadInput(string message)
+    {
+        Console.Write(message);
+        return Console.ReadLine();
     }
 }
 
-public void CancelBooking()
+class Program
 {
-    var concertName = ReadInput("Podaj nazwę koncertu: ");
-    var concert = concerts.FirstOrDefault(c => c.Name == concertName);
-
-    if (concert == null)
+    static void Main(string[] args)
     {
-        Console.WriteLine("Koncert nie został znaleziony.");
-        return;
-    }
+        BookingSystem system = new();
+        while (true)
+        {
+            Console.WriteLine("\nWybierz opcję:");
+            Console.WriteLine("1 - Dodaj koncert");
+            Console.WriteLine("2 - Wyświetl koncerty");
+            Console.WriteLine("3 - Wyszukaj koncerty");
+            Console.WriteLine("4 - Zarezerwuj bilet");
+            Console.WriteLine("5 - Anuluj rezerwację");
+            Console.WriteLine("6 - Wyjdź");
 
-    int seatsToCancel = int.Parse(ReadInput("Podaj liczbę miejsc do anulowania: "));
-    concert.AvailableSeats += seatsToCancel;
-    Console.WriteLine($"Anulowano {seatsToCancel} rezerwacji. Dostępne miejsca: {concert.AvailableSeats}.");
+            string wybor = Console.ReadLine();
+
+            switch (wybor)
+            {
+                case "1":
+                    system.AddConcert();
+                    break;
+                case "2":
+                    system.DisplayConcerts();
+                    break;
+                case "3":
+                    system.SearchConcerts();
+                    break;
+                case "4":
+                    system.BookTicket();
+                    break;
+                case "5":
+                    system.CancelBooking();
+                    break;
+                case "6":
+                    return;
+                default:
+                    Console.WriteLine("Niepoprawny wybór. Spróbuj jeszcze raz.");
+                    break;
+            }
+        }
+    }
 }
