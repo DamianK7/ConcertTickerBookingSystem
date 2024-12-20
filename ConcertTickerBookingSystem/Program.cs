@@ -145,3 +145,46 @@ public void SearchConcerts()
         Console.WriteLine("Nie znaleziono pasujących koncertów.");
     }
 }
+
+public void BookTicket()
+{
+    var concertName = ReadInput("Podaj nazwę koncertu: ");
+    var concert = concerts.FirstOrDefault(c => c.Name == concertName);
+
+    if (concert == null)
+    {
+        Console.WriteLine("Koncert nie został znaleziony.");
+        return;
+    }
+
+    int seatsToBook = int.Parse(ReadInput("Podaj liczbę miejsc do rezerwacji: "));
+    if (seatsToBook <= concert.AvailableSeats)
+    {
+        concert.AvailableSeats -= seatsToBook;
+        Console.WriteLine($"Zarezerwowano {seatsToBook} miejsc. Pozostało {concert.AvailableSeats} wolnych.");
+        if (concert.AvailableSeats <= 10)
+        {
+            Console.WriteLine("Uwaga! Pozostało mniej niż 10 miejsc!");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Nie ma wystarczającej liczby miejsc.");
+    }
+}
+
+public void CancelBooking()
+{
+    var concertName = ReadInput("Podaj nazwę koncertu: ");
+    var concert = concerts.FirstOrDefault(c => c.Name == concertName);
+
+    if (concert == null)
+    {
+        Console.WriteLine("Koncert nie został znaleziony.");
+        return;
+    }
+
+    int seatsToCancel = int.Parse(ReadInput("Podaj liczbę miejsc do anulowania: "));
+    concert.AvailableSeats += seatsToCancel;
+    Console.WriteLine($"Anulowano {seatsToCancel} rezerwacji. Dostępne miejsca: {concert.AvailableSeats}.");
+}
