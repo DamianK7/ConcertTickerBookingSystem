@@ -101,3 +101,47 @@ class BookingSystem
         Console.WriteLine("Koncert został dodany!");
     }
 }
+
+public void DisplayConcerts()
+{
+    if (concerts.Count == 0)
+    {
+        Console.WriteLine("Brak dostępnych koncertów.");
+    }
+    else
+    {
+        foreach (var concert in concerts)
+        {
+            Console.WriteLine(concert is Concert c ? c.GetDetails() : null);
+        }
+    }
+}
+
+public void SearchConcerts()
+{
+    Console.WriteLine("Wyszukiwanie koncertów:");
+    Console.WriteLine("1 - Data");
+    Console.WriteLine("2 - Lokalizacja");
+    Console.WriteLine("3 - Cena maksymalna");
+
+    string choice = Console.ReadLine();
+    IEnumerable<IConcert> results = choice switch
+    {
+        "1" => concerts.Where(c => c.Date == ReadInput("Podaj datę (DD-MM-YYYY): ")),
+        "2" => concerts.Where(c => c.Location.Contains(ReadInput("Podaj lokalizację: "), StringComparison.OrdinalIgnoreCase)),
+        "3" => concerts.Where(c => c.TicketPrice <= decimal.Parse(ReadInput("Podaj maksymalną cenę: "))),
+        _ => null
+    };
+
+    if (results != null && results.Any())
+    {
+        foreach (var concert in results)
+        {
+            Console.WriteLine(concert is Concert c ? c.GetDetails() : null);
+        }
+    }
+    else
+    {
+        Console.WriteLine("Nie znaleziono pasujących koncertów.");
+    }
+}
